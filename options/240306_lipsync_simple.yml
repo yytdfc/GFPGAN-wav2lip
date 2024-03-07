@@ -1,0 +1,74 @@
+# general settings
+name: 240306_lipsync_simple
+model_type: LipSyncSimpleModel
+num_gpu: auto  # officially, we use 4 GPUs
+manual_seed: 0
+
+# dataset and data loader settings
+datasets:
+  train:
+    name: lipsync_train
+    type: LipSyncDataset
+    dataroot: ./facedata/
+    out_size: 256
+    input_frames_num: 2
+    audio_window_length: 10
+    audio_window_before: 2
+    turn_to_simple_aug: 64000
+
+    # data loader
+    use_shuffle: false
+    num_worker_per_gpu: 10
+    batch_size_per_gpu: 32
+    dataset_enlarge_ratio: 100
+    prefetch_mode: ~
+
+
+# network structures
+network_g:
+  type: Wav2Lip
+
+# path
+path:
+  pretrain_network_g: ~
+  param_key_g: params_ema
+  strict_load_g: ~
+  pretrain_network_d: ~
+  resume_state: ~
+
+# training settings
+train:
+  optim_g:
+    type: Adam
+    lr: !!float 1e-3
+
+  scheduler:
+    type: MultiStepLR
+    milestones: [ 15000, 25000 ]
+    gamma: 0.2
+
+  total_iter: 30000
+  warmup_iter: 100
+
+  # losses
+  # pixel loss
+  pixel_opt:
+    type: L1Loss
+    loss_weight: !!float 1.0
+    reduction: mean
+
+# logging settings
+logger:
+  print_freq: 10
+  save_checkpoint_freq: !!float 2e3
+  use_tb_logger: true
+  wandb:
+    project: lipsync_simple
+    resume_id: ~
+
+# dist training settings
+dist_params:
+  backend: nccl
+  port: 29500
+
+find_unused_parameters: true
